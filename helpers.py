@@ -65,17 +65,19 @@ class Stopwatch(object):
 
 
 def load_patient_images(patient_id, base_dir=None, wildcard="*.*", exclude_wildcards=[]):
-    if base_dir == None:
-        base_dir = settings.LUNA_16_TRAIN_DIR
-    src_dir = base_dir + patient_id + "/"
+    # if base_dir == None:
+    #     base_dir = settings.LUNA_16_TRAIN_DIR
+    src_dir = f"D:\saved_imgs\{patient_id}\image\\"
     src_img_paths = glob.glob(src_dir + wildcard)
     for exclude_wildcard in exclude_wildcards:
         exclude_img_paths = glob.glob(src_dir + exclude_wildcard)
         src_img_paths = [im for im in src_img_paths if im not in exclude_img_paths]
-    src_img_paths.sort()
+    # src_img_paths.sort()
+    print(src_img_paths)
     images = [cv2.imread(img_path, cv2.IMREAD_GRAYSCALE) for img_path in src_img_paths]
     images = [im.reshape((1, ) + im.shape) for im in images]
     res = numpy.vstack(images)
+    print(res.shape)
     return res
 
 
@@ -302,7 +304,7 @@ def prepare_image_for_net3D(img, mean_value=None):
 
 
 def get_distance(df_row1, df_row2):
-    dist = math.sqrt(math.pow(df_row1["coord_x"] - df_row2["coord_x"], 2) + math.pow(df_row1["coord_y"] - df_row2["coord_y"], 2) + math.pow(df_row1["coord_y"] - df_row2["coord_y"], 2))
+    dist = math.sqrt(math.pow(df_row1["coordX"] - df_row2["coordX"], 2) + math.pow(df_row1["coordY"] - df_row2["coordY"], 2) + math.pow(df_row1["coordY"] - df_row2["coordY"], 2))
     return dist
 
 

@@ -402,16 +402,11 @@ def process_excluded_annotations_patient(src_path, patient_id):
 
 
 def process_luna_candidates_patient(src_path, patient_id):
-    dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "/_labels/"
-    img_dir = dst_dir + patient_id + "/"
-    df_pos_annos = pandas.read_csv(dst_dir + patient_id + "_annos_pos_lidc.csv")
-    if not os.path.exists(dst_dir):
-        os.mkdir(dst_dir)
-
+    df_pos_annos = pandas.read_csv("D:\DLCSD24_Annotations.csv")
     pos_annos_manual = None
-    manual_path = settings.EXTRA_DATA_DIR + "luna16_manual_labels/" + patient_id + ".csv"
-    if os.path.exists(manual_path):
-        pos_annos_manual = pandas.read_csv(manual_path)
+    # manual_path = settings.EXTRA_DATA_DIR + "luna16_manual_labels/" + patient_id + ".csv"
+    # if os.path.exists(manual_path):
+    #     pos_annos_manual = pandas.read_csv(manual_path)
 
     itk_img = SimpleITK.ReadImage(src_path)
     img_array = SimpleITK.GetArrayFromImage(itk_img)
@@ -443,10 +438,10 @@ def process_luna_candidates_patient(src_path, patient_id):
     print("Direction: ", direction)
     assert abs(sum(direction) - 3) < 0.01
 
-    src_df = pandas.read_csv("resources/luna16_annotations/" + "candidates_V2.csv")
-    src_df = src_df[src_df["seriesuid"] == patient_id]
-    src_df = src_df[src_df["class"] == 0]
-    patient_imgs = helpers.load_patient_images(patient_id, settings.LUNA16_EXTRACTED_IMAGE_DIR, "*_i.png")
+    src_df = pandas.read_csv("D:\DLCSD24_Annotations.csv")
+    src_df = src_df[src_df["patient-id"] == patient_id]
+    # src_df = src_df[src_df["class"] == 0]
+    patient_imgs = helpers.load_patient_images(patient_id, "D://saved_imgs//")
     candidate_list = []
 
     for df_index, candiate_row in src_df.iterrows():
@@ -475,10 +470,10 @@ def process_luna_candidates_patient(src_path, patient_id):
         ok = True
 
         for index, row in df_pos_annos.iterrows():
-            pos_coord_x = row["coord_x"] * patient_imgs.shape[2]
-            pos_coord_y = row["coord_y"] * patient_imgs.shape[1]
-            pos_coord_z = row["coord_z"] * patient_imgs.shape[0]
-            diameter = row["diameter"] * patient_imgs.shape[2]
+            pos_coord_x = row["coordX"] * patient_imgs.shape[2]
+            pos_coord_y = row["coordY"] * patient_imgs.shape[1]
+            pos_coord_z = row["coordZ"] * patient_imgs.shape[0]
+            diameter = (row["coordX"] + row["coordY"])/2* patient_imgs.shape[2]
             dist = math.sqrt(math.pow(pos_coord_x - coord_x, 2) + math.pow(pos_coord_y - coord_y, 2) + math.pow(pos_coord_z - coord_z, 2))
             if dist < (diameter + 64):  #  make sure we have a big margin
                 ok = False
@@ -505,8 +500,8 @@ def process_luna_candidates_patient(src_path, patient_id):
         candidate_list.append([len(candidate_list), round(center_float_percent[0], 4), round(center_float_percent[1], 4), round(center_float_percent[2], 4), round(candidate_diameter / patient_imgs.shape[0], 4), 0])
 
     df_candidates = pandas.DataFrame(candidate_list, columns=["anno_index", "coord_x", "coord_y", "coord_z", "diameter", "malscore"])
-    df_candidates.to_csv(dst_dir + patient_id + "_candidates_luna.csv", index=False)
 
+    print(df_candidates)
 
 def process_auto_candidates_patient(src_path, patient_id, sample_count=1000, candidate_type="white"):
     dst_dir = settings.LUNA16_EXTRACTED_IMAGE_DIR + "/_labels/"
@@ -670,13 +665,14 @@ def process_auto_candidates_patients():
 
 def process_luna_candidates_patients(only_patient_id=None):
     for subject_no in range(settings.LUNA_SUBSET_START_INDEX, 10):
-        src_dir = settings.LUNA16_RAW_SRC_DIR + "subset" + str(subject_no) + "/"
-        for patient_index, src_path in enumerate(glob.glob(src_dir + "*.mhd")):
+        # src_dir = settings.LUNA16_RAW_SRC_DIR + "subset" + str(subject_no) + "/"
+        for patient_index, src_path in enumerate(glob.glob("D://Duke Health/" + "*.nii.gz")):
             # if not "100621383016233746780170740405" in src_path:
             #     continue
-            patient_id = ntpath.basename(src_path).replace(".mhd", "")
-            if only_patient_id is not None and patient_id != only_patient_id:
-                continue
+            # patient_id = ntpath.basename(src_path).replace(".mhd", "")
+            # if only_patient_id is not None and patient_id != only_patient_id:
+            #     continue
+            patient_id = src_path.split('//')[-1].split('.')[0].split('\\')[1]
             print("Patient: ", patient_index, " ", patient_id)
             process_luna_candidates_patient(src_path, patient_id)
 
@@ -707,18 +703,18 @@ def process_lidc_annotations(only_patient=None, agreement_threshold=0):
 
 
 if __name__ == "__main__":
-    if True:
-        only_process_patient = None
-        process_images(delete_existing=False, only_process_patient=only_process_patient)
-
-    if True:
-        process_lidc_annotations(only_patient=None, agreement_threshold=0)
-
-    if True:
-        process_pos_annotations_patient2()
-        process_excluded_annotations_patients(only_patient=None)
+    # if True:
+    #     only_process_patient = None
+    #     process_images(delete_existing=False, only_process_patient=only_process_patient)
+    #
+    # if True:
+    #     process_lidc_annotations(only_patient=None, agreement_threshold=0)
+    #
+    # if True:
+    #     process_pos_annotations_patient2()
+    #     process_excluded_annotations_patients(only_patient=None)
 
     if True:
         process_luna_candidates_patients(only_patient_id=None)
-    if True:
-        process_auto_candidates_patients()
+    # if True:
+    #     process_auto_candidates_patients()
